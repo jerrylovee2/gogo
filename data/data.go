@@ -5,7 +5,7 @@ import (
 )
 
 type Member struct {
-	ID          int    `json:"id"`
+	ID          string `json:"id"`
 	Name        string `json:"name"`
 	PhoneNumber string `json:"phone_number"`
 }
@@ -21,21 +21,28 @@ type Book struct {
 }
 
 type Borrower struct {
-	MemberID int   `json:"member_id"`
-	Books    []int `json:"books"`
+	ID       int    `json:"id"`
+	MemberID string `json:"member_id"`
+	Books    []int  `json:"books"`
 }
 
 var InMemoryDB struct {
 	sync.RWMutex
-	Books     map[int]Book
-	NextID    int
-	Indices   map[string]map[string][]int
-	Members   map[int]Member
-	Borrowers map[int]Borrower
+	Books          map[int]Book
+	NextBookID     int
+	Indices        map[string]map[string][]int
+	Members        map[string]Member
+	NextMemberID   int
+	Borrowers      map[int]Borrower
+	NextBorrowerID int
 }
 
 func Initialize() {
 	InMemoryDB.Books = make(map[int]Book)
 	InMemoryDB.Indices = make(map[string]map[string][]int)
-	InMemoryDB.NextID = 1
+	InMemoryDB.Members = make(map[string]Member)
+	InMemoryDB.Borrowers = make(map[int]Borrower)
+	InMemoryDB.NextBookID = 1
+	InMemoryDB.NextMemberID = 1
+	InMemoryDB.NextBorrowerID = 1
 }
