@@ -1,21 +1,20 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/jerrylovee2/gogo/data"
+	"github.com/gin-gonic/gin"
+	"github.com/jerrylovee2/gogo/data" // Update import path accordingly
 )
 
-func CreateBookHandler(w http.ResponseWriter, r *http.Request) {
+func CreateBookHandler(c *gin.Context) {
 	var newBook data.Book
-	err := json.NewDecoder(r.Body).Decode(&newBook)
-	if err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&newBook); err != nil {
+		c.JSON(http.StatusBadRequest, data.ErrorResponse{Error: "Invalid JSON"})
 		return
 	}
 
@@ -33,22 +32,21 @@ func CreateBookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	data.InMemoryDB.Indices[newBook.Genre][newBook.Author] = append(data.InMemoryDB.Indices[newBook.Genre][newBook.Author], newBook.ID)
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(newBook)
+	c.JSON(http.StatusOK, newBook)
 }
 
-func DeleteBookHandler(w http.ResponseWriter, r *http.Request) {
-	idParam := r.URL.Query().Get("id")
+func DeleteBookHandler(c *gin.Context) {
+	idParam := c.Query("id")
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
-		http.Error(w, "Invalid book ID", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, data.ErrorResponse{Error: "Invalid book ID"})
 		return
 	}
 
 	data.InMemoryDB.Lock()
 	defer data.InMemoryDB.Unlock()
 	if _, ok := data.InMemoryDB.Books[id]; !ok {
-		http.Error(w, "Book not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, data.ErrorResponse{Error: "Book not found"})
 		return
 	}
 
@@ -66,10 +64,10 @@ func DeleteBookHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	c.Status(http.StatusNoContent)
 }
 
-func GetAllBooksHandler(w http.ResponseWriter, r *http.Request) {
+func GetAllBooksHandler(c *gin.Context) {
 	data.InMemoryDB.RLock()
 	defer data.InMemoryDB.RUnlock()
 
@@ -78,14 +76,13 @@ func GetAllBooksHandler(w http.ResponseWriter, r *http.Request) {
 		books = append(books, book)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(books)
+	c.JSON(http.StatusOK, books)
 }
 
-func SearchBooksHandler(w http.ResponseWriter, r *http.Request) {
-	yearParam := r.URL.Query().Get("year")
-	authorParam := r.URL.Query().Get("author")
-	genreParam := r.URL.Query().Get("genre")
+func SearchBooksHandler(c *gin.Context) {
+	yearParam := c.Query("year")
+	authorParam := c.Query("author")
+	genreParam := c.Query("genre")
 
 	data.InMemoryDB.RLock()
 	defer data.InMemoryDB.RUnlock()
@@ -99,15 +96,13 @@ func SearchBooksHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(filteredBooks)
+	c.JSON(http.StatusOK, filteredBooks)
 }
 
-func CreateMemberHandler(w http.ResponseWriter, r *http.Request) {
+func CreateMemberHandler(c *gin.Context) {
 	var newMember data.Member
-	err := json.NewDecoder(r.Body).Decode(&newMember)
-	if err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&newMember); err != nil {
+		c.JSON(http.StatusBadRequest, data.ErrorResponse{Error: "Invalid JSON"})
 		return
 	}
 
@@ -119,27 +114,25 @@ func CreateMemberHandler(w http.ResponseWriter, r *http.Request) {
 	data.InMemoryDB.Members[newMember.ID] = newMember
 	data.InMemoryDB.NextMemberID++
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(newMember)
+	c.JSON(http.StatusOK, newMember)
 }
 
-func GetMemberByIDHandler(w http.ResponseWriter, r *http.Request) {
-	idParam := r.URL.Query().Get("id")
+func GetMemberByIDHandler(c *gin.Context) {
+	idParam := c.Query("id")
 	member, ok := data.InMemoryDB.Members[idParam]
 	if !ok {
-		http.Error(w, "Member not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, data.ErrorResponse{Error: "Member not found"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(member)
+	c.JSON(http.StatusOK, member)
 }
 
-func DeleteMemberByIDHandler(w http.ResponseWriter, r *http.Request) {
-	idParam := r.URL.Query().Get("id")
+func DeleteMemberByIDHandler(c *gin.Context) {
+	idParam := c.Query("id")
 	_, ok := data.InMemoryDB.Members[idParam]
 	if !ok {
-		http.Error(w, "Member not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, data.ErrorResponse{Error: "Member not found"})
 		return
 	}
 
@@ -147,14 +140,13 @@ func DeleteMemberByIDHandler(w http.ResponseWriter, r *http.Request) {
 	defer data.InMemoryDB.Unlock()
 	delete(data.InMemoryDB.Members, idParam)
 
-	w.WriteHeader(http.StatusNoContent)
+	c.Status(http.StatusNoContent)
 }
 
-func CreateBorrowerHandler(w http.ResponseWriter, r *http.Request) {
+func CreateBorrowerHandler(c *gin.Context) {
 	var newBorrower data.Borrower
-	err := json.NewDecoder(r.Body).Decode(&newBorrower)
-	if err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&newBorrower); err != nil {
+		c.JSON(http.StatusBadRequest, data.ErrorResponse{Error: "Invalid JSON"})
 		return
 	}
 
@@ -165,15 +157,14 @@ func CreateBorrowerHandler(w http.ResponseWriter, r *http.Request) {
 	data.InMemoryDB.Borrowers[newBorrower.ID] = newBorrower
 	data.InMemoryDB.NextBorrowerID++
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(newBorrower)
+	c.JSON(http.StatusOK, newBorrower)
 }
 
-func GetBorrowerByIDHandler(w http.ResponseWriter, r *http.Request) {
-	idParam := r.URL.Query().Get("id")
+func GetBorrowerByIDHandler(c *gin.Context) {
+	idParam := c.Query("id")
 	borrowerID, err := strconv.Atoi(idParam)
 	if err != nil {
-		http.Error(w, "Invalid borrower ID", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, data.ErrorResponse{Error: "Invalid borrower ID"})
 		return
 	}
 
@@ -182,27 +173,21 @@ func GetBorrowerByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 	borrower, ok := data.InMemoryDB.Borrowers[borrowerID]
 	if !ok {
-		http.Error(w, "Borrower not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, data.ErrorResponse{Error: "Borrower not found"})
 		return
 	}
 
 	dueDate := time.Now().AddDate(0, 1, 0)
 	penalty := 5.0
 
-	borrowerInfo := struct {
-		data.Borrower
-		DueDate   time.Time `json:"due_date"`
-		Penalty   float64   `json:"penalty_per_day"`
-		Penalties float64   `json:"penalties"`
-	}{
+	borrowerInfo := data.BorrowerInfo{
 		Borrower:  borrower,
 		DueDate:   dueDate,
 		Penalty:   penalty,
 		Penalties: calculatePenalties(dueDate, penalty),
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(borrowerInfo)
+	c.JSON(http.StatusOK, borrowerInfo)
 }
 
 func calculatePenalties(dueDate time.Time, penaltyPerDay float64) float64 {
@@ -213,11 +198,11 @@ func calculatePenalties(dueDate time.Time, penaltyPerDay float64) float64 {
 	return daysLate * penaltyPerDay
 }
 
-func DeleteBorrowerByIDHandler(w http.ResponseWriter, r *http.Request) {
-	idParam := r.URL.Query().Get("id")
+func DeleteBorrowerByIDHandler(c *gin.Context) {
+	idParam := c.Query("id")
 	borrowerID, err := strconv.Atoi(idParam)
 	if err != nil {
-		http.Error(w, "Invalid borrower ID", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, data.ErrorResponse{Error: "Invalid borrower ID"})
 		return
 	}
 
@@ -225,11 +210,11 @@ func DeleteBorrowerByIDHandler(w http.ResponseWriter, r *http.Request) {
 	defer data.InMemoryDB.Unlock()
 
 	if _, ok := data.InMemoryDB.Borrowers[borrowerID]; !ok {
-		http.Error(w, "Borrower not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, data.ErrorResponse{Error: "Borrower not found"})
 		return
 	}
 
 	delete(data.InMemoryDB.Borrowers, borrowerID)
 
-	w.WriteHeader(http.StatusNoContent)
+	c.Status(http.StatusNoContent)
 }
