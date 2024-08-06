@@ -1,0 +1,307 @@
+basePath: /
+definitions:
+  data.Book:
+    properties:
+      author:
+        type: string
+      genre:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+      unique_id:
+        type: string
+      year:
+        type: integer
+    type: object
+  data.Borrower:
+    properties:
+      book_id:
+        type: integer
+      borrowed:
+        type: string
+      id:
+        type: integer
+      member_id:
+        type: string
+    type: object
+  data.BorrowerInfo:
+    properties:
+      book_id:
+        type: integer
+      borrowed:
+        type: string
+      due_date:
+        type: string
+      id:
+        type: integer
+      member_id:
+        type: string
+      penalties:
+        type: number
+      penalty_per_day:
+        type: number
+    type: object
+  data.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  data.Member:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+host: localhost:8081
+info:
+  contact: {}
+  description: This is a sample LMS server.
+  title: Library Management System API
+  version: "1.0"
+paths:
+  /books/all:
+    get:
+      description: Retrieve all books from the library
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/data.Book'
+            type: array
+      summary: Get all books
+      tags:
+      - books
+  /books/create:
+    post:
+      consumes:
+      - application/json
+      description: Create a new book in the library
+      parameters:
+      - description: Book object
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/data.Book'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/data.Book'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ErrorResponse'
+      summary: Create a new book
+      tags:
+      - books
+  /books/delete:
+    delete:
+      description: Delete a book from the library
+      parameters:
+      - description: Book ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/data.ErrorResponse'
+      summary: Delete a book
+      tags:
+      - books
+  /books/search:
+    get:
+      description: Search books by year, author, and/or genre
+      parameters:
+      - description: Year of publication
+        in: query
+        name: year
+        type: integer
+      - description: Author name
+        in: query
+        name: author
+        type: string
+      - description: Book genre
+        in: query
+        name: genre
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/data.Book'
+            type: array
+      summary: Search books
+      tags:
+      - books
+  /borrowers/create:
+    post:
+      consumes:
+      - application/json
+      description: Create a new book borrower
+      parameters:
+      - description: Borrower object
+        in: body
+        name: borrower
+        required: true
+        schema:
+          $ref: '#/definitions/data.Borrower'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/data.Borrower'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ErrorResponse'
+      summary: Create a new borrower
+      tags:
+      - borrowers
+  /borrowers/delete:
+    delete:
+      description: Delete a borrower by their ID
+      parameters:
+      - description: Borrower ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/data.ErrorResponse'
+      summary: Delete a borrower
+      tags:
+      - borrowers
+  /borrowers/get:
+    get:
+      description: Retrieve a borrower by their ID
+      parameters:
+      - description: Borrower ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/data.BorrowerInfo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/data.ErrorResponse'
+      summary: Get a borrower by ID
+      tags:
+      - borrowers
+  /members/create:
+    post:
+      consumes:
+      - application/json
+      description: Create a new library member
+      parameters:
+      - description: Member object
+        in: body
+        name: member
+        required: true
+        schema:
+          $ref: '#/definitions/data.Member'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/data.Member'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/data.ErrorResponse'
+      summary: Create a new member
+      tags:
+      - members
+  /members/delete:
+    delete:
+      description: Delete a library member by their ID
+      parameters:
+      - description: Member ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/data.ErrorResponse'
+      summary: Delete a member
+      tags:
+      - members
+  /members/get:
+    get:
+      description: Retrieve a library member by their ID
+      parameters:
+      - description: Member ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/data.Member'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/data.ErrorResponse'
+      summary: Get a member by ID
+      tags:
+      - members
+swagger: "2.0"

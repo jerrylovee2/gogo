@@ -3,30 +3,47 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
+	"os"
 
-	"github.com/jerrylovee2/gogo/data"
+	"github.com/gin-gonic/gin"
+	_ "github.com/jerrylovee2/gogo/docs"
 	handlers "github.com/jerrylovee2/gogo/handler"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func main() {
+	r := gin.Default()
 
-	data.Initialize()
+	r.Use(func(c *gin.Context) {
+		c.Next()
+		if len(c.Errors) > 0 {
+			for _, e := range c.Errors {
+				log.Println(e.Err)
+			}
+		}
+	})
 
-	http.HandleFunc("/books/create", handlers.CreateBookHandler)
-	http.HandleFunc("/books/delete", handlers.DeleteBookHandler)
-	http.HandleFunc("/books/all", handlers.GetAllBooksHandler)
-	http.HandleFunc("/books/search", handlers.SearchBooksHandler)
+	r.POST("/books/create", handlers.CreateBookHandler)
+	r.DELETE("/books/delete", handlers.DeleteBookHandler)
+	r.GET("/books/all", handlers.GetAllBooksHandler)
+	r.GET("/books/search", handlers.SearchBooksHandler)
 
-	http.HandleFunc("/members/create", handlers.CreateMemberHandler)
-	http.HandleFunc("/members/get", handlers.GetMemberByIDHandler)
-	http.HandleFunc("/members/delete", handlers.DeleteMemberByIDHandler)
+	r.POST("/members/create", handlers.CreateMemberHandler)
+	r.GET("/members/get", handlers.GetMemberByIDHandler)
+	r.DELETE("/members/delete", handlers.DeleteMemberByIDHandler)
 
-	http.HandleFunc("/borrowers/create", handlers.CreateBorrowerHandler)
-	http.HandleFunc("/borrowers/get", handlers.GetBorrowerByIDHandler)
-	http.HandleFunc("/borrowers/delete", handlers.DeleteBorrowerByIDHandler)
+	r.POST("/borrowers/create", handlers.CreateBorrowerHandler)
+	r.GET("/borrowers/get", handlers.GetBorrowerByIDHandler)
+	r.DELETE("/borrowers/delete", handlers.DeleteBorrowerByIDHandler)
 
-	port := ":8081"
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8081"
+	}
+
 	fmt.Printf("Starting server on port %s...\n", port)
-	log.Fatal(http.ListenAndServe(port, nil))
+	log.Fatal(r.Run(":" + port))
 }
