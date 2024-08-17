@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jerrylovee2/gogo/data"
+	"github.com/jerrylovee2/gogo/data" // Update import path accordingly
 )
 
 func CreateBookHandler(c *gin.Context) {
@@ -103,12 +103,6 @@ func CreateMemberHandler(c *gin.Context) {
 	var newMember data.Member
 	if err := c.ShouldBindJSON(&newMember); err != nil {
 		c.JSON(http.StatusBadRequest, data.ErrorResponse{Error: "Invalid JSON"})
-		return
-	}
-
-	// Validate the length of the member's name
-	if len(newMember.Name) > 15 {
-		c.JSON(http.StatusBadRequest, data.ErrorResponse{Error: "Member name should not exceed 15 characters"})
 		return
 	}
 
